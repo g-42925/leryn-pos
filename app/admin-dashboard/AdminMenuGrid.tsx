@@ -18,7 +18,6 @@ const allMenuItems = [
   { title: "Manage Admin", icon: UserCog, href: "/admin-dashboard/manage-admin", color: "from-amber-600 to-orange-500" },
   { title: "Manage Role", icon: Shield, href: "/admin-dashboard/manage-role", color: "from-amber-500 to-yellow-600", superadminOnly: true },
   { title: "Report", icon: PieChart, href: "/admin-dashboard/report", color: "from-indigo-500 to-violet-600" },
-  { title: "Customer Management", icon: UserCircle, href: "/admin-dashboard/customers", color: "from-lime-500 to-green-600" },
   { title: "Restaurant Profile", icon: Store, href: "/admin-dashboard/profile", color: "from-fuchsia-500 to-rose-600", superadminOnly: true },
 ]
 

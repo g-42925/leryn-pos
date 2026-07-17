@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
-import { PackageOpen, Plus, Loader2, ArrowLeft, RefreshCw, Hash, ArrowUpCircle, ArrowDownCircle } from "lucide-react"
+import { Trash2, PackageOpen, Plus, Loader2, ArrowLeft, RefreshCw, Hash, ArrowUpCircle, ArrowDownCircle } from "lucide-react"
 import useGlobalState from "@/store/global"
 import { getInventoryItemsAction, addInventoryItemAction, updateStockAction } from "@/app/actions/manage-inventory"
 import { getBranchesAction } from "@/app/actions/manage-branch"
@@ -31,17 +31,17 @@ function StockManager({ item, accountId, onUpdate }: { item: any; accountId: str
   if (mode) {
     return (
       <div className="flex items-center gap-2">
-        <input 
-          type="number" 
-          value={amount} 
+        <input
+          type="number"
+          value={amount}
           onChange={e => setAmount(e.target.value)}
-          className="w-24 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+          className="w-24 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
           placeholder={`Jml (${mode === 'in' ? item.stockUnit : item.usageUnit})`}
           autoFocus
           disabled={loading}
         />
         <button onClick={handleApply} disabled={loading} className="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors shadow-sm">
-          {loading ? <Loader2 className="w-4 h-4 animate-spin"/> : "OK"}
+          {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "OK"}
         </button>
         <button onClick={() => setMode(null)} disabled={loading} className="px-3 py-1.5 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium rounded-md text-sm hover:bg-slate-300 dark:hover:bg-slate-600 disabled:opacity-50 transition-colors shadow-sm">
           Batal
@@ -52,19 +52,15 @@ function StockManager({ item, accountId, onUpdate }: { item: any; accountId: str
 
   return (
     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-      <div className="flex flex-col">
-        <span className="font-bold text-lg">{item.stockQty || 0} <span className="text-sm font-medium text-slate-500">{item.stockUnit}</span></span>
-        <span className="text-xs text-slate-500">({item.usageQty || 0} {item.usageUnit})</span>
-      </div>
       <div className="flex items-center gap-1">
-        <button 
+        <button
           onClick={() => setMode('in')}
           className="p-1.5 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-md transition-colors border border-emerald-200 dark:border-emerald-500/30 shadow-sm"
           title="Tambah Stock (IN)"
         >
           <ArrowUpCircle size={18} />
         </button>
-        <button 
+        <button
           onClick={() => setMode('out')}
           className="p-1.5 bg-rose-50 dark:bg-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 rounded-md transition-colors border border-rose-200 dark:border-rose-500/30 shadow-sm"
           title="Kurangi Stock (OUT)"
@@ -81,12 +77,12 @@ export default function ManageInventoryItemsPage() {
   const isSuperadmin = role === 'superadmin'
   const params = useParams()
   const inventoryTypeId = params.id as string
-  
+
   const [typeInfo, setTypeInfo] = useState<any>(null)
   const [items, setItems] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   const [name, setName] = useState("")
   const [stockUnit, setStockUnit] = useState("")
   const [usageUnit, setUsageUnit] = useState("")
@@ -127,7 +123,7 @@ export default function ManageInventoryItemsPage() {
     } else if (hasHydrated && (!accountId || !inventoryTypeId)) {
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, inventoryTypeId, hasHydrated, isSuperadmin, userBranch])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,7 +134,7 @@ export default function ManageInventoryItemsPage() {
     }
     setSubmitting(true)
     setError("")
-    
+
     const result = await addInventoryItemAction(inventoryTypeId, accountId, name, stockUnit, usageUnit, Number(conversionValue), branchId)
     if (result.success) {
       setName("")
@@ -192,13 +188,13 @@ export default function ManageInventoryItemsPage() {
         <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
           <h2 className="text-xl font-bold mb-4">Tambah Item Baru</h2>
           {error && <div className="mb-4 text-red-500 text-sm font-medium">{error}</div>}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-row gap-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex flex-col gap-1 lg:col-span-2">
+              <div className="flex flex-col lg:col-span-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Barang</label>
-                <input 
-                  type="text" 
-                  placeholder="Contoh: Daging Ayam, Kopi" 
+                <input
+                  type="text"
+                  placeholder="Contoh: Daging Ayam, Kopi"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -207,9 +203,9 @@ export default function ManageInventoryItemsPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan Stock</label>
-                <input 
-                  type="text" 
-                  placeholder="Contoh: Kg, Dus" 
+                <input
+                  type="text"
+                  placeholder="Contoh: Kg, Dus"
                   value={stockUnit}
                   onChange={(e) => setStockUnit(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -218,9 +214,9 @@ export default function ManageInventoryItemsPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan Penggunaan</label>
-                <input 
-                  type="text" 
-                  placeholder="Contoh: g, Pcs" 
+                <input
+                  type="text"
+                  placeholder="Contoh: g, Pcs"
                   value={usageUnit}
                   onChange={(e) => setUsageUnit(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -229,12 +225,12 @@ export default function ManageInventoryItemsPage() {
               </div>
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                  Konversi <span className="lowercase text-indigo-500">(1 {stockUnit || 'Stock'} = ? {usageUnit || 'Usage'})</span>
+                  Konversi
                 </label>
-                <input 
-                  type="number" 
+                <input
+                  type="number"
                   min="1"
-                  placeholder="Contoh: 1000" 
+                  placeholder="Contoh: 1000"
                   value={conversionValue}
                   onChange={(e) => setConversionValue(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -257,17 +253,12 @@ export default function ManageInventoryItemsPage() {
                   </select>
                 </div>
               ) : (
-                <div className="flex flex-col gap-1 justify-end">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cabang</label>
-                  <div className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-500">
-                    {branches.find(b => b._id === branchId)?.name || 'Cabang Anda'}
-                  </div>
-                </div>
+                <></>
               )}
             </div>
             <div className="flex justify-end">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={submitting}
                 className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 whitespace-nowrap"
               >
@@ -285,7 +276,7 @@ export default function ManageInventoryItemsPage() {
               <RefreshCw size={16} /> <span>Refresh</span>
             </button>
           </div>
-          
+
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
             {items.length === 0 ? (
               <div className="py-16 text-center text-slate-500 dark:text-slate-400">
@@ -299,7 +290,9 @@ export default function ManageInventoryItemsPage() {
                       <th className="pr-6 py-4 pl-6 font-semibold text-slate-500 dark:text-slate-400">Nama Barang</th>
                       {isSuperadmin && <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-1/6">Cabang</th>}
                       <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-1/6">Satuan</th>
+                      <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-1/6">Satuan penggunaan</th>
                       <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-[200px]">Sisa Stock</th>
+                      <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-[200px]">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -323,12 +316,19 @@ export default function ManageInventoryItemsPage() {
                         <td className="px-6 py-4">
                           <div className="flex flex-col items-start gap-1">
                             <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                              <span className="text-xs uppercase mr-1 text-slate-400 font-bold">Stock:</span> {item.stockUnit}
-                            </span>
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                              <span className="text-xs uppercase mr-1 text-slate-400 font-bold">Usage:</span> {item.usageUnit}
+                              <span className="text-xs uppercase mr-1 text-slate-400 font-bold">{item.stockUnit}</span>
                             </span>
                           </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                              <span className="text-xs uppercase mr-1 text-slate-400 font-bold">{item.usageUnit}</span>
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-bold text-lg">{item.stockQty || 0} <span className="text-sm font-medium text-slate-500">{item.stockUnit}</span></span>
                         </td>
                         <td className="px-6 py-4">
                           <StockManager item={item} accountId={accountId} onUpdate={loadData} />

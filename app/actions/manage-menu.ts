@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/mongodb"
 import Menu from "@/model/menu"
 import Recipe from "@/model/recipe"
 import MenuCategory from "@/model/menu-category"
+import mongoose from "mongoose"
 
 export async function getMenusAction(accountId: string) {
   try {
@@ -23,8 +24,13 @@ export async function getMenusAction(accountId: string) {
 export async function getBranchRecipesAction(branchId: string, accountId: string) {
   try {
     await connectToDatabase()
-    const recipes = await Recipe.find({ branchId, accountId }).sort({ name: 1 }).lean()
-    
+    if (!mongoose.Types.ObjectId.isValid(branchId)) {
+      return { success: true, data: [] }
+    }
+    const recipes = await Recipe.find({
+      branchId: new mongoose.Types.ObjectId(branchId),
+      accountId
+    }).sort({ name: 1 }).lean()
     return { success: true, data: JSON.parse(JSON.stringify(recipes)) }
   } catch (error: any) {
     return { success: false, message: error.message }
@@ -34,8 +40,13 @@ export async function getBranchRecipesAction(branchId: string, accountId: string
 export async function getBranchCategoriesAction(branchId: string, accountId: string) {
   try {
     await connectToDatabase()
-    const categories = await MenuCategory.find({ branchId, accountId }).sort({ name: 1 }).lean()
-    
+    if (!mongoose.Types.ObjectId.isValid(branchId)) {
+      return { success: true, data: [] }
+    }
+    const categories = await MenuCategory.find({
+      branchId: new mongoose.Types.ObjectId(branchId),
+      accountId
+    }).sort({ name: 1 }).lean()
     return { success: true, data: JSON.parse(JSON.stringify(categories)) }
   } catch (error: any) {
     return { success: false, message: error.message }

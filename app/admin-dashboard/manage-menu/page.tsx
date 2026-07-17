@@ -77,6 +77,11 @@ export default function ManageMenuPage() {
         setCategoryId("")
         return
       }
+      // Always reset first so stale data from a previous branch never shows
+      setRecipes([])
+      setCategories([])
+      setRecipeId("")
+      setCategoryId("")
       setLoadingRecipes(true)
       setLoadingCategories(true)
       try {
@@ -86,11 +91,9 @@ export default function ManageMenuPage() {
         ])
         if (recipesResult.success) {
           setRecipes(recipesResult.data || [])
-          setRecipeId("") // Reset valid recipe selected
         }
         if (categoriesResult.success) {
           setCategories(categoriesResult.data || [])
-          setCategoryId("")
         }
       } catch (e) {
         console.error(e)

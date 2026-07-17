@@ -8,7 +8,7 @@ import { getBranchesAction } from "@/app/actions/manage-branch"
 import { getStaffListAction, changeStaffPasswordAction } from "@/app/actions/settings"
 
 export default function ChangePasswordPage() {
-  const { accountId, hasHydrated } = useGlobalState()
+  const { accountId, hasHydrated, role, branch } = useGlobalState()
 
   const [staff, setStaff] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([])
@@ -38,8 +38,21 @@ export default function ChangePasswordPage() {
         getStaffListAction(accountId),
         getBranchesAction(accountId),
       ])
-      if (staffRes.success) setStaff(staffRes.data || [])
-      if (branchRes.success) setBranches(branchRes.data || [])
+      if (staffRes.success) {
+        let staffData = staffRes.data || []
+        if (role !== "superadmin") {
+          staffData = staffData.filter((s: any) => s.branchId === branch)
+        }
+        setStaff(staffData)
+      }
+      if (branchRes.success) {
+        let branchData = branchRes.data || []
+        if (role !== "superadmin") {
+          branchData = branchData.filter((b: any) => b._id === branch)
+          setFilterBranchId(branch)
+        }
+        setBranches(branchData)
+      }
     } catch (e) {
       console.error(e)
     } finally {
@@ -169,7 +182,8 @@ export default function ChangePasswordPage() {
               <select
                 value={filterBranchId}
                 onChange={(e) => setFilterBranchId(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none text-sm"
+                disabled={role !== "superadmin"}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none text-sm disabled:opacity-50"
               >
                 <option value="">Semua Cabang</option>
                 {branches.map((b) => (
