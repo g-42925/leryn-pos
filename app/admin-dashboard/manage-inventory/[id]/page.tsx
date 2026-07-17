@@ -35,8 +35,8 @@ function StockManager({ item, accountId, onUpdate }: { item: any; accountId: str
           type="number" 
           value={amount} 
           onChange={e => setAmount(e.target.value)}
-          className="w-20 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" 
-          placeholder="Jml" 
+          className="w-24 px-2 py-1.5 text-sm border border-slate-300 dark:border-slate-700 dark:bg-slate-800 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" 
+          placeholder={`Jml (${mode === 'in' ? item.stockUnit : item.usageUnit})`}
           autoFocus
           disabled={loading}
         />
@@ -51,8 +51,11 @@ function StockManager({ item, accountId, onUpdate }: { item: any; accountId: str
   }
 
   return (
-    <div className="flex items-center gap-3">
-      <span className="font-bold text-lg min-w-[2rem]">{item.stock || 0}</span>
+    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+      <div className="flex flex-col">
+        <span className="font-bold text-lg">{item.stockQty || 0} <span className="text-sm font-medium text-slate-500">{item.stockUnit}</span></span>
+        <span className="text-xs text-slate-500">({item.usageQty || 0} {item.usageUnit})</span>
+      </div>
       <div className="flex items-center gap-1">
         <button 
           onClick={() => setMode('in')}
@@ -85,7 +88,9 @@ export default function ManageInventoryItemsPage() {
   const [loading, setLoading] = useState(true)
   
   const [name, setName] = useState("")
-  const [unit, setUnit] = useState("")
+  const [stockUnit, setStockUnit] = useState("")
+  const [usageUnit, setUsageUnit] = useState("")
+  const [conversionValue, setConversionValue] = useState("1")
   const [branchId, setBranchId] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
@@ -127,17 +132,19 @@ export default function ManageInventoryItemsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !unit.trim() || !branchId) {
-      setError("Nama, satuan, dan cabang wajib diisi.")
+    if (!name.trim() || !stockUnit.trim() || !usageUnit.trim() || !branchId || isNaN(Number(conversionValue)) || Number(conversionValue) < 1) {
+      setError("Nama, semua satuan, nilai konversi, dan cabang wajib diisi.")
       return
     }
     setSubmitting(true)
     setError("")
     
-    const result = await addInventoryItemAction(inventoryTypeId, accountId, name, unit, branchId)
+    const result = await addInventoryItemAction(inventoryTypeId, accountId, name, stockUnit, usageUnit, Number(conversionValue), branchId)
     if (result.success) {
       setName("")
-      setUnit("")
+      setStockUnit("")
+      setUsageUnit("")
+      setConversionValue("1")
       if (!(!isSuperadmin && userBranch)) setBranchId("")
       loadData()
     } else {
@@ -191,7 +198,7 @@ export default function ManageInventoryItemsPage() {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Barang</label>
                 <input 
                   type="text" 
-                  placeholder="Contoh: Daging Ayam" 
+                  placeholder="Contoh: Daging Ayam, Kopi" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
@@ -199,12 +206,37 @@ export default function ManageInventoryItemsPage() {
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan</label>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan Stock</label>
                 <input 
                   type="text" 
-                  placeholder="Contoh: Kg, Ekor" 
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
+                  placeholder="Contoh: Kg, Dus" 
+                  value={stockUnit}
+                  onChange={(e) => setStockUnit(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan Penggunaan</label>
+                <input 
+                  type="text" 
+                  placeholder="Contoh: g, Pcs" 
+                  value={usageUnit}
+                  onChange={(e) => setUsageUnit(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Konversi <span className="lowercase text-indigo-500">(1 {stockUnit || 'Stock'} = ? {usageUnit || 'Usage'})</span>
+                </label>
+                <input 
+                  type="number" 
+                  min="1"
+                  placeholder="Contoh: 1000" 
+                  value={conversionValue}
+                  onChange={(e) => setConversionValue(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
                   required
                 />
@@ -289,9 +321,14 @@ export default function ManageInventoryItemsPage() {
                           </td>
                         )}
                         <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                            {item.unit}
-                          </span>
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                              <span className="text-xs uppercase mr-1 text-slate-400 font-bold">Stock:</span> {item.stockUnit}
+                            </span>
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                              <span className="text-xs uppercase mr-1 text-slate-400 font-bold">Usage:</span> {item.usageUnit}
+                            </span>
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <StockManager item={item} accountId={accountId} onUpdate={loadData} />

@@ -222,7 +222,7 @@ export default function ManageRecipePage() {
                 <div className="space-y-3">
                   {ingredients.map((ing, idx) => (
                     <div key={idx} className="flex gap-3 items-end">
-                      <div className="flex-1 space-y-1">r
+                      <div className="flex-1 space-y-1">
                         {idx === 0 && <label className="text-xs font-semibold text-slate-500">Pilih Item Inventory</label>}
                         <select
                           value={ing.inventoryItemId}
@@ -233,7 +233,7 @@ export default function ManageRecipePage() {
                           <option value="" disabled className="dark:bg-slate-900">Pilih Item</option>
                           {inventoryItems.map((item) => (
                             <option key={item._id} value={item._id} className="dark:bg-slate-900">
-                              {item.name} ({item.unit})
+                              {item.name} ({item.usageUnit})
                             </option>
                           ))}
                         </select>

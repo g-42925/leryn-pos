@@ -36,11 +36,10 @@ export async function getInventoryItemsAction(typeId: string, accountId: string)
   }
 }
 
-export async function addInventoryItemAction(typeId: string, accountId: string, name: string, unit: string, branchId: string) {
+export async function addInventoryItemAction(typeId: string, accountId: string, name: string, stockUnit: string, usageUnit: string, conversionValue: number, branchId: string) {
   try {
     await connectToDatabase()
-    // By default, mongoose will use the default stock: 0
-    const newItem = await inventoryItem.create({ inventoryTypeId: typeId, accountId, branchId, name, unit })
+    const newItem = await inventoryItem.create({ inventoryTypeId: typeId, accountId, branchId, name, stockUnit, usageUnit, conversionValue, stockQty: 0, usageQty: 0 })
     return { success: true, data: JSON.parse(JSON.stringify(newItem)) }
   } catch (error: any) {
     return { success: false, message: error.message }
@@ -56,12 +55,18 @@ export async function updateStockAction(itemId: string, accountId: string, type:
     const item = await inventoryItem.findOne({ _id: itemId, accountId })
     if (!item) return { success: false, message: "Item tidak ditemukan" }
 
-    if (type === 'out' && item.stock < amount) {
+    if (type === 'out' && item.usageQty < amount) {
       return { success: false, message: "Stock tidak mencukupi" }
     }
 
-    const change = type === 'in' ? amount : -amount
-    item.stock += change
+    if (type === 'in') {
+      item.usageQty += (amount * item.conversionValue)
+    } else {
+      item.usageQty -= amount
+    }
+    
+    item.stockQty = item.usageQty / item.conversionValue
+    
     await item.save()
 
     return { success: true, data: JSON.parse(JSON.stringify(item)) }

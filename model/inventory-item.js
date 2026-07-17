@@ -22,12 +22,26 @@ const InventoryItemSchema = new Schema(
       required: true,
       trim: true,
     },
-    unit: {
+    stockUnit: {
       type: String,
       required: true,
       trim: true,
     },
-    stock: {
+    usageUnit: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    conversionValue: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    stockQty: {
+      type: Number,
+      default: 0,
+    },
+    usageQty: {
       type: Number,
       default: 0,
     },
