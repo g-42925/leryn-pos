@@ -7,7 +7,8 @@ import useGlobalState from "@/store/global"
 import { getInventoryTypesAction, addInventoryTypeAction } from "@/app/actions/manage-inventory"
 
 export default function ManageInventoryPage() {
-  const { accountId, hasHydrated } = useGlobalState()
+  const { accountId, role, hasHydrated } = useGlobalState()
+  const isSuperadmin = role === 'superadmin'
   
   const [types, setTypes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -86,28 +87,36 @@ export default function ManageInventoryPage() {
           </div>
         </header>
 
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-          <h2 className="text-xl font-bold mb-4">Tambah Jenis Inventory</h2>
-          {error && <div className="mb-4 text-red-500 text-sm font-medium">{error}</div>}
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
-            <input 
-              type="text" 
-              placeholder="Contoh: Bahan Baku, Kemasan..." 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="flex-grow px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-              required
-            />
-            <button 
-              type="submit" 
-              disabled={submitting}
-              className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 whitespace-nowrap"
-            >
-              {submitting ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
-              <span>Tambah</span>
-            </button>
-          </form>
-        </section>
+        {isSuperadmin && (
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <h2 className="text-xl font-bold mb-4">Tambah Jenis Inventory</h2>
+            {error && <div className="mb-4 text-red-500 text-sm font-medium">{error}</div>}
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
+              <input 
+                type="text" 
+                placeholder="Contoh: Bahan Baku, Kemasan..." 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="flex-grow px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                required
+              />
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                {submitting ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                <span>Tambah</span>
+              </button>
+            </form>
+          </section>
+        )}
+        {!isSuperadmin && (
+          <div className="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-2xl text-amber-700 dark:text-amber-400 text-sm font-medium">
+            <Package size={18} className="shrink-0" />
+            Anda hanya dapat mengelola item inventory untuk cabang Anda. Silakan pilih jenis inventory di bawah.
+          </div>
+        )}
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">

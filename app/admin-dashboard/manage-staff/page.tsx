@@ -9,19 +9,20 @@ import { getStaffAction, addStaffAction } from "@/app/actions/manage-staff"
 import { getRolesAction } from "@/app/actions/manage-role"
 
 export default function ManageStaffPage() {
-  const { accountId, hasHydrated } = useGlobalState()
-  
+  const { accountId, role, branch: userBranch, hasHydrated } = useGlobalState()
+  const isSuperadmin = role === 'superadmin'
+
   const [staffData, setStaffData] = useState<any[]>([])
   const [branches, setBranches] = useState<any[]>([])
   const [roles, setRoles] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   // Form State
   const [name, setName] = useState("")
   const [pin, setPin] = useState("")
   const [branchId, setBranchId] = useState("")
-  const [role, setRole] = useState("")
-  
+  const [xrole, setXRole] = useState("")
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -34,17 +35,17 @@ export default function ManageStaffPage() {
         getBranchesAction(accountId),
         getRolesAction(accountId)
       ])
-      
+
       if (rolesResult.success) {
         setRoles(rolesResult.data || [])
       }
-      
+
       if (branchesResult.success) {
         setBranches(branchesResult.data || [])
       } else {
         console.error(branchesResult.message)
       }
-      
+
       if (staffResult.success) {
         setStaffData(staffResult.data || [])
       } else {
@@ -60,11 +61,14 @@ export default function ManageStaffPage() {
   useEffect(() => {
     if (hasHydrated && accountId) {
       loadData()
+      if (!isSuperadmin && userBranch) {
+        setBranchId(userBranch)
+      }
     } else if (hasHydrated && !accountId) {
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountId, hasHydrated])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId, hasHydrated, isSuperadmin, userBranch])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,18 +80,19 @@ export default function ManageStaffPage() {
       setError("PIN minimal 4 karakter.")
       return
     }
-    
+
     setSubmitting(true)
     setError("")
-    
-    const result = await addStaffAction(accountId, branchId, name, pin, role)
+
+    const result = await addStaffAction(accountId, branchId, name, pin, xrole)
     if (result.success) {
       setName("")
       setPin("")
       setBranchId("")
-      setRole("")
+      setXRole("")
       loadData()
-    } else {
+    }
+    else {
       setError(result.message)
     }
     setSubmitting(false)
@@ -134,9 +139,9 @@ export default function ManageStaffPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Nama Staff</label>
-                <input 
-                  type="text" 
-                  placeholder="Contoh: Budi Santoso" 
+                <input
+                  type="text"
+                  placeholder="Contoh: Budi Santoso"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-rose-500 outline-none transition-all"
@@ -145,9 +150,9 @@ export default function ManageStaffPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">PIN Akses POS</label>
-                <input 
-                  type="password" 
-                  placeholder="Masukkan PIN (minimal 4 digit)" 
+                <input
+                  type="password"
+                  placeholder="Masukkan PIN (minimal 4 digit)"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-rose-500 outline-none transition-all"
@@ -155,33 +160,35 @@ export default function ManageStaffPage() {
                   minLength={4}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Cabang</label>
-                <select 
-                  value={branchId}
-                  onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none"
-                  required
-                >
-                  <option value="" disabled className="dark:bg-slate-900">Pilih Cabang (Branch)</option>
-                  {branches.map((branch) => (
-                    <option key={branch._id} value={branch._id} className="dark:bg-slate-900">
-                      {branch.name}
-                    </option>
-                  ))}
-                </select>
-                {branches.length === 0 && (
-                  <p className="text-xs text-orange-500 mt-1">
-                    Anda belum membuat Cabang. <Link href="/admin-dashboard/manage-branch" className="underline font-bold">Buat cabang sekarang</Link>.
-                  </p>
-                )}
-              </div>
+              {isSuperadmin && (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Cabang</label>
+                  <select
+                    value={branchId}
+                    onChange={(e) => setBranchId(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none"
+                    required
+                  >
+                    <option value="" disabled className="dark:bg-slate-900">Pilih Cabang (Branch)</option>
+                    {branches.map((branch) => (
+                      <option key={branch._id} value={branch._id} className="dark:bg-slate-900">
+                        {branch.name}
+                      </option>
+                    ))}
+                  </select>
+                  {branches.length === 0 && (
+                    <p className="text-xs text-orange-500 mt-1">
+                      Anda belum membuat Cabang. <Link href="/admin-dashboard/manage-branch" className="underline font-bold">Buat cabang sekarang</Link>.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Role</label>
-                <select 
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
+                <select
+                  value={xrole}
+                  onChange={(e) => setXRole(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-rose-500 outline-none transition-all appearance-none"
                   required
                 >
@@ -202,10 +209,10 @@ export default function ManageStaffPage() {
                 )}
               </div>
             </div>
-            
+
             <div className="flex justify-end pt-2">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={submitting || branches.length === 0}
                 className="px-8 py-3 bg-rose-600 hover:bg-rose-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
               >
@@ -223,31 +230,31 @@ export default function ManageStaffPage() {
               <RefreshCw size={16} /> <span>Refresh</span>
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {staffData.length === 0 ? (
+            {(isSuperadmin ? staffData : staffData.filter(s => s.branchId === userBranch)).length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
-                Belum ada staff yang terdaftar.
+                Belum ada staff yang terdaftar untuk cabang ini.
               </div>
             ) : (
-              staffData.map((staff) => (
-                <div 
-                  key={staff._id} 
+              (isSuperadmin ? staffData : staffData.filter(s => s.branchId === userBranch)).map((staff) => (
+                <div
+                  key={staff._id}
                   className="group block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all hover:border-rose-500 relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-rose-500 to-pink-500 opacity-10 group-hover:opacity-20 rounded-bl-full transition-opacity" />
-                  
+
                   <div className="flex justify-between items-start mb-4">
                     <div className="h-12 w-12 bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 rounded-xl flex items-center justify-center">
                       <UserCheck size={24} />
                     </div>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold mb-1 text-slate-900 dark:text-white capitalize">{staff.name}</h3>
                   <div className="text-sm text-slate-500 dark:text-slate-400 mb-4 flex items-center gap-2">
                     <span className="capitalize">{staff.role || "Cashier"}</span>
                   </div>
-                  
+
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <div className="text-xs font-semibold px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg">
                       Cabang: {staff.branchName || "Unknown Branch"}

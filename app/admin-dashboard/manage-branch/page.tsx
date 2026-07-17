@@ -9,16 +9,16 @@ import { getBranchesAction, addBranchAction } from "@/app/actions/manage-branch"
 
 export default function ManageBranchPage() {
   const { accountId, hasHydrated } = useGlobalState()
-  
+
   const [branches, setBranches] = useState<any[]>([])
   const [inventoryTypes, setInventoryTypes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   // Form State
   const [name, setName] = useState("")
   const [address, setAddress] = useState("")
   const [inventoryId, setInventoryId] = useState("")
-  
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -31,12 +31,13 @@ export default function ManageBranchPage() {
         getInventoryTypesAction(accountId),
         getBranchesAction(accountId)
       ])
-      
+
       setInventoryTypes(invTypesData || [])
-      
+
       if (branchesResult.success) {
         setBranches(branchesResult.data || [])
-      } else {
+      }
+      else {
         console.error(branchesResult.message)
       }
     } catch (e: any) {
@@ -52,7 +53,7 @@ export default function ManageBranchPage() {
     } else if (hasHydrated && !accountId) {
       setLoading(false)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, hasHydrated])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,7 +64,7 @@ export default function ManageBranchPage() {
     }
     setSubmitting(true)
     setError("")
-    
+
     const result = await addBranchAction(accountId, name, address, inventoryId)
     if (result.success) {
       setName("")
@@ -117,9 +118,9 @@ export default function ManageBranchPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Nama Cabang / Outlet</label>
-                <input 
-                  type="text" 
-                  placeholder="Contoh: Cabang Jakarta Pusat" 
+                <input
+                  type="text"
+                  placeholder="Contoh: Cabang Jakarta Pusat"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-sky-500 outline-none transition-all"
@@ -128,7 +129,7 @@ export default function ManageBranchPage() {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Hubungkan ke Inventory</label>
-                <select 
+                <select
                   value={inventoryId}
                   onChange={(e) => setInventoryId(e.target.value)}
                   className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-sky-500 outline-none transition-all appearance-none"
@@ -150,17 +151,17 @@ export default function ManageBranchPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Alamat Cabang (Opsional)</label>
-              <textarea 
-                placeholder="Detail alamat cabang..." 
+              <textarea
+                placeholder="Detail alamat cabang..."
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-sky-500 outline-none transition-all resize-none min-h-[100px]"
               />
             </div>
-            
+
             <div className="flex justify-end">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={submitting || inventoryTypes.length === 0}
                 className="px-8 py-3 bg-sky-600 hover:bg-sky-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
               >
@@ -178,7 +179,7 @@ export default function ManageBranchPage() {
               <RefreshCw size={16} /> <span>Refresh</span>
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {branches.length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
@@ -186,23 +187,23 @@ export default function ManageBranchPage() {
               </div>
             ) : (
               branches.map((branch) => (
-                <div 
-                  key={branch._id} 
+                <div
+                  key={branch._id}
                   className="group block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all hover:border-sky-500 relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-sky-500 to-transparent opacity-10 group-hover:opacity-20 rounded-bl-full transition-opacity" />
-                  
+
                   <div className="flex justify-between items-start mb-4">
                     <div className="h-12 w-12 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 rounded-xl flex items-center justify-center">
                       <Store size={24} />
                     </div>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold mb-1 text-slate-900 dark:text-white">{branch.name}</h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-2 min-h-[40px] mb-4">
                     {branch.address || "Tidak ada alamat lengkap"}
                   </p>
-                  
+
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
                     <div className="text-xs font-semibold px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg">
                       Inventory: {branch.inventoryName || "Unknown"}

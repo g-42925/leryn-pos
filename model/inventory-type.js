@@ -20,4 +20,8 @@ const InventoryTypeSchema = new Schema(
 
 InventoryTypeSchema.index({ accountId: 1, name: 1 }, { unique: true });
 
-export default models.InventoryType || model("InventoryType", InventoryTypeSchema);
+const inventoryType = models.InventoryType || model("InventoryType", InventoryTypeSchema);
+
+export {
+  inventoryType
+}

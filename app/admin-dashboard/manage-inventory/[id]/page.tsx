@@ -6,6 +6,7 @@ import { useParams } from "next/navigation"
 import { PackageOpen, Plus, Loader2, ArrowLeft, RefreshCw, Hash, ArrowUpCircle, ArrowDownCircle } from "lucide-react"
 import useGlobalState from "@/store/global"
 import { getInventoryItemsAction, addInventoryItemAction, updateStockAction } from "@/app/actions/manage-inventory"
+import { getBranchesAction } from "@/app/actions/manage-branch"
 
 function StockManager({ item, accountId, onUpdate }: { item: any; accountId: string; onUpdate: () => void }) {
   const [loading, setLoading] = useState(false)
@@ -73,16 +74,19 @@ function StockManager({ item, accountId, onUpdate }: { item: any; accountId: str
 }
 
 export default function ManageInventoryItemsPage() {
-  const { accountId, hasHydrated } = useGlobalState()
+  const { accountId, role, branch: userBranch, hasHydrated } = useGlobalState()
+  const isSuperadmin = role === 'superadmin'
   const params = useParams()
   const inventoryTypeId = params.id as string
   
   const [typeInfo, setTypeInfo] = useState<any>(null)
   const [items, setItems] = useState<any[]>([])
+  const [branches, setBranches] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   
   const [name, setName] = useState("")
   const [unit, setUnit] = useState("")
+  const [branchId, setBranchId] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -109,21 +113,32 @@ export default function ManageInventoryItemsPage() {
   useEffect(() => {
     if (hasHydrated && accountId && inventoryTypeId) {
       loadData()
+      getBranchesAction(accountId).then(res => {
+        if (res.success) setBranches(res.data || [])
+      })
+      if (!isSuperadmin && userBranch) {
+        setBranchId(userBranch)
+      }
     } else if (hasHydrated && (!accountId || !inventoryTypeId)) {
       setLoading(false)
     }
-  }, [accountId, inventoryTypeId, hasHydrated])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId, inventoryTypeId, hasHydrated, isSuperadmin, userBranch])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!name.trim() || !unit.trim()) return
+    if (!name.trim() || !unit.trim() || !branchId) {
+      setError("Nama, satuan, dan cabang wajib diisi.")
+      return
+    }
     setSubmitting(true)
     setError("")
     
-    const result = await addInventoryItemAction(inventoryTypeId, accountId, name, unit)
+    const result = await addInventoryItemAction(inventoryTypeId, accountId, name, unit, branchId)
     if (result.success) {
       setName("")
       setUnit("")
+      if (!(!isSuperadmin && userBranch)) setBranchId("")
       loadData()
     } else {
       setError(result.message)
@@ -170,37 +185,62 @@ export default function ManageInventoryItemsPage() {
         <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
           <h2 className="text-xl font-bold mb-4">Tambah Item Baru</h2>
           {error && <div className="mb-4 text-red-500 text-sm font-medium">{error}</div>}
-          <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-grow flex flex-col gap-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Barang</label>
-              <input 
-                type="text" 
-                placeholder="Contoh: Daging Ayam" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                required
-              />
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex flex-col gap-1 lg:col-span-2">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Barang</label>
+                <input 
+                  type="text" 
+                  placeholder="Contoh: Daging Ayam" 
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  required
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan</label>
+                <input 
+                  type="text" 
+                  placeholder="Contoh: Kg, Ekor" 
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                  required
+                />
+              </div>
+              {isSuperadmin ? (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cabang</label>
+                  <select
+                    value={branchId}
+                    onChange={(e) => setBranchId(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all appearance-none"
+                    required
+                  >
+                    <option value="" disabled className="dark:bg-slate-900">Pilih Cabang</option>
+                    {branches.map(b => (
+                      <option key={b._id} value={b._id} className="dark:bg-slate-900">{b.name}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1 justify-end">
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Cabang</label>
+                  <div className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm text-slate-500">
+                    {branches.find(b => b._id === branchId)?.name || 'Cabang Anda'}
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="sm:w-1/3 flex flex-col gap-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Satuan</label>
-              <input 
-                type="text" 
-                placeholder="Contoh: Kg, Ekor" 
-                value={unit}
-                onChange={(e) => setUnit(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1 justify-end">
+            <div className="flex justify-end">
               <button 
                 type="submit" 
                 disabled={submitting}
-                className="w-full sm:w-auto h-[50px] mt-auto px-6 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 whitespace-nowrap"
               >
                 {submitting ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
-                <span>Tambah</span>
+                <span>Tambah Item</span>
               </button>
             </div>
           </form>
@@ -225,12 +265,13 @@ export default function ManageInventoryItemsPage() {
                   <thead>
                     <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                       <th className="pr-6 py-4 pl-6 font-semibold text-slate-500 dark:text-slate-400">Nama Barang</th>
+                      {isSuperadmin && <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-1/6">Cabang</th>}
                       <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-1/6">Satuan</th>
                       <th className="px-6 py-4 font-semibold text-slate-500 dark:text-slate-400 w-[200px]">Sisa Stock</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {items.map((item) => (
+                    {(isSuperadmin ? items : items.filter(i => String(i.branchId) === userBranch)).map((item) => (
                       <tr key={item._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                         <td className="pr-6 py-4 pl-6 font-medium">
                           <div className="flex items-center gap-3">
@@ -240,6 +281,13 @@ export default function ManageInventoryItemsPage() {
                             {item.name}
                           </div>
                         </td>
+                        {isSuperadmin && (
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                              {branches.find(b => b._id === String(item.branchId))?.name || 'N/A'}
+                            </span>
+                          </td>
+                        )}
                         <td className="px-6 py-4">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-md text-sm font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                             {item.unit}

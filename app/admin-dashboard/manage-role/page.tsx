@@ -9,15 +9,15 @@ import { getPermissionsAction } from "@/app/actions/manage-permission"
 
 export default function ManageRolePage() {
   const { accountId, hasHydrated } = useGlobalState()
-  
+
   const [roles, setRoles] = useState<Record<string, unknown>[]>([])
   const [availablePermissions, setAvailablePermissions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  
+
   // Form State
   const [name, setName] = useState("")
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
-  
+
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [error, setError] = useState("")
@@ -31,7 +31,7 @@ export default function ManageRolePage() {
         getRolesAction(accountId),
         getPermissionsAction(accountId)
       ])
-      
+
       if (permRes.success) {
         setAvailablePermissions(permRes.data || [])
       } else {
@@ -40,10 +40,12 @@ export default function ManageRolePage() {
 
       if (roleRes.success) {
         setRoles(roleRes.data || [])
-      } else {
-        console.error(roleRes.message)
       }
-    } catch (e) {
+      else {
+        //console.error('')
+      }
+    }
+    catch (e) {
       const err = e as Error
       console.error(err.message)
     } finally {
@@ -61,11 +63,11 @@ export default function ManageRolePage() {
       setLoading(false)
     }
     return () => { active = false }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accountId, hasHydrated])
 
   const handleTogglePermission = (id: string) => {
-    setSelectedPermissions(prev => 
+    setSelectedPermissions(prev =>
       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     )
   }
@@ -80,11 +82,11 @@ export default function ManageRolePage() {
       setError("Pilih setidaknya satu hak akses!")
       return
     }
-    
+
     setSubmitting(true)
     setError("")
     setSuccessMsg("")
-    
+
     const result = await addRoleAction(accountId, name, selectedPermissions)
     if (result.success) {
       setName("")
@@ -100,7 +102,7 @@ export default function ManageRolePage() {
 
   const handleDelete = async (roleId: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus Role ini?")) return
-    
+
     setDeleting(roleId)
     const result = await deleteRoleAction(roleId, accountId)
     if (result.success) {
@@ -149,36 +151,35 @@ export default function ManageRolePage() {
           <h2 className="text-xl font-bold mb-6">Tambah Role Baru</h2>
           {error && <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium border border-red-200 dark:border-red-800">{error}</div>}
           {successMsg && <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 rounded-xl text-sm font-medium border border-green-200 dark:border-green-800">{successMsg}</div>}
-          
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Nama Posisi / Role</label>
-              <input 
-                type="text" 
-                placeholder="Contoh: Manajer Operasional" 
+              <input
+                type="text"
+                placeholder="Contoh: Manajer Operasional"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full md:w-1/2 px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-amber-500 outline-none transition-all"
                 required
               />
             </div>
-            
+
             <div className="space-y-3 pt-2">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Hak Akses (Permissions)</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 {availablePermissions.length === 0 ? (
                   <p className="text-sm text-slate-500 col-span-full">Belum ada permission terdaftar. <Link href="/admin-dashboard/manage-permission" className="text-amber-600 hover:underline">Tambah permission baru.</Link></p>
                 ) : availablePermissions.map(permission => (
-                  <label 
-                    key={permission._id} 
-                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-                      selectedPermissions.includes(permission._id) 
-                        ? "border-amber-500 bg-amber-50 dark:bg-amber-500/10" 
-                        : "border-slate-200 dark:border-slate-800 hover:border-amber-300"
-                    }`}
+                  <label
+                    key={permission._id}
+                    className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${selectedPermissions.includes(permission._id)
+                      ? "border-amber-500 bg-amber-50 dark:bg-amber-500/10"
+                      : "border-slate-200 dark:border-slate-800 hover:border-amber-300"
+                      }`}
                   >
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       className="w-4 h-4 text-amber-600 focus:ring-amber-500 rounded border-slate-300"
                       checked={selectedPermissions.includes(permission._id)}
                       onChange={() => handleTogglePermission(permission._id)}
@@ -188,10 +189,10 @@ export default function ManageRolePage() {
                 ))}
               </div>
             </div>
-            
+
             <div className="flex justify-end pt-4">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={submitting || availablePermissions.length === 0}
                 className="px-8 py-3 bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
               >
@@ -209,7 +210,7 @@ export default function ManageRolePage() {
               <RefreshCw size={16} /> <span>Refresh</span>
             </button>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {roles.length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
@@ -217,17 +218,17 @@ export default function ManageRolePage() {
               </div>
             ) : (
               roles.map((role) => (
-                <div 
-                  key={role._id} 
+                <div
+                  key={role._id}
                   className="group block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all hover:border-amber-500 relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500 to-yellow-500 opacity-10 group-hover:opacity-20 rounded-bl-full transition-opacity" />
-                  
+
                   <div className="flex justify-between items-start mb-4">
                     <div className="h-12 w-12 bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center shadow-inner">
                       <KeyRound size={24} />
                     </div>
-                    <button 
+                    <button
                       onClick={() => handleDelete(role._id)}
                       disabled={deleting === role._id}
                       className="text-slate-400 hover:text-red-500 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
@@ -236,12 +237,12 @@ export default function ManageRolePage() {
                       {deleting === role._id ? <Loader2 className="animate-spin w-4 h-4" /> : <Trash2 size={18} />}
                     </button>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold mb-1 text-slate-900 dark:text-white capitalize">{role.name}</h3>
                   <div className="text-sm text-slate-500 dark:text-slate-400 mb-4">
                     {role.permissions.length} Hak Akses Diberikan
                   </div>
-                  
+
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-wrap gap-2">
                     {role.permissions.slice(0, 3).map((perm: string) => {
                       const label = availablePermissions.find(p => p._id === perm)?.name || perm

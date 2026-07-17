@@ -8,9 +8,19 @@ import { adminLoginAction, FormState, LoginResponse } from "@/app/actions/admin-
 function Form() {
   const router = useRouter()
   const accountId = useGlobalStore((s) => s.accountId)
+  const adminLogin = useGlobalStore((s) => s.adminLogin)
 
   const _login = useFormAction(adminLoginAction, {
     onSuccess: (state: FormState<LoginResponse>) => {
+      const result = {
+        accountId: state.result?.accountId as string,
+        role: state.result?.role as string,
+        permission: state.result?.permissions as string[],
+        branch: state.result?.branch as string,
+      }
+
+      adminLogin(result)
+
       router.push("/admin-dashboard")
     }
   })

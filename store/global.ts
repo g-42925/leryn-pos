@@ -7,14 +7,16 @@ import { persist, devtools } from 'zustand/middleware'
 
 export interface GlobalState {
   accountId: string;
-  loggedInAs: string;
-  name: string
+  role: string;
+  permission: string[],
+  branch: string
 }
 
 const initialState = {
   accountId: '',
-  loggedInAs: '',
-  name: ''
+  role: '',
+  branch: '',
+  permission: []
 }
 
 const useGlobalState = create<Global>()(
@@ -30,9 +32,17 @@ const useGlobalState = create<Global>()(
         staffLogout: async () => {
           await staffLogoutAction()
         },
+        adminLogin: (r: GlobalState) => {
+          set(() => ({
+            ...r,
+          }))
+        },
         login: (r: GlobalState) => {
           set(() => ({
-            ...r
+            ...r,
+            role: '',
+            branch: '',
+            permission: []
           }))
         },
       }),
@@ -50,6 +60,7 @@ const useGlobalState = create<Global>()(
 type Global = GlobalState & {
   hasHydrated: boolean;
   login: (r: GlobalState) => void;
+  adminLogin: (r: GlobalState) => void;
   staffLogout: () => void;
   logout: () => void;
 }

@@ -1,10 +1,8 @@
-import Link from "next/link"
-
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { ShoppingCart, Utensils, PlusSquare, Calculator, Settings, Grid, Users, PieChart, UserCircle, Store, LogOut, Package, GitBranch, Key, Shield, BookOpen } from "lucide-react"
-
-
+import { Store, LogOut } from "lucide-react"
+import AdminMenuGrid from "./AdminMenuGrid"
+import DashboardHeader from "./DashboardHeader"
 
 export default async function AdminDashboard() {
   const cookieStore = await cookies()
@@ -21,31 +19,11 @@ export default async function AdminDashboard() {
     redirect("/home")
   }
 
-  const menuItems = [
-    { title: "Manage Menu", icon: Utensils, href: "/admin-dashboard/manage-menu", color: "from-emerald-500 to-teal-600" },
-    { title: "Manage Inventory", icon: Package, href: "/admin-dashboard/manage-inventory", color: "from-orange-500 to-red-600" },
-    { title: "Manage Branch", icon: GitBranch, href: "/admin-dashboard/manage-branch", color: "from-sky-500 to-cyan-600" },
-    { title: "Manage Recipe", icon: BookOpen, href: "/admin-dashboard/manage-recipe", color: "from-amber-500 to-orange-600" },
-    { title: "Manage Additional Menu", icon: PlusSquare, href: "/admin-dashboard/manage-additional-menu", color: "from-amber-500 to-orange-600" },
-    { title: "Manage Tax", icon: Calculator, href: "/admin-dashboard/manage-tax", color: "from-purple-500 to-fuchsia-600" },
-    { title: "Settings", icon: Settings, href: "/admin-dashboard/settings", color: "from-gray-500 to-slate-600" },
-    { title: "Manage Table", icon: Grid, href: "/admin-dashboard/manage-table", color: "from-cyan-500 to-blue-600" },
-    { title: "Manage Staff", icon: Users, href: "/admin-dashboard/manage-staff", color: "from-rose-500 to-pink-600" },
-    { title: "Manage Role", icon: Shield, href: "/admin-dashboard/manage-role", color: "from-amber-500 to-yellow-600" },
-    { title: "Manage Permission", icon: Key, href: "/admin-dashboard/manage-permission", color: "from-teal-500 to-emerald-600" },
-    { title: "Report", icon: PieChart, href: "/admin-dashboard/report", color: "from-indigo-500 to-violet-600" },
-    { title: "Customer Management", icon: UserCircle, href: "/admin-dashboard/customers", color: "from-lime-500 to-green-600" },
-    { title: "Restaurant Profile", icon: Store, href: "/admin-dashboard/profile", color: "from-fuchsia-500 to-rose-600" },
-  ]
-
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 p-6 sm:p-10 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
         <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-extrabold tracking-tight">Admin Dashboard</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">Manage your restaurant operations efficiently.</p>
-          </div>
+          <DashboardHeader />
           <div className="flex items-center gap-4">
             <form action={logout}>
               <button
@@ -62,28 +40,7 @@ export default async function AdminDashboard() {
           </div>
         </header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {menuItems.map((item, index) => {
-            const Icon = item.icon
-            return (
-              <Link
-                key={index}
-                href={item.href}
-                className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-800 hover:-translate-y-1 flex flex-col p-6"
-              >
-                <div className={`absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl ${item.color} rounded-bl-full opacity-10 group-hover:opacity-20 transition-opacity duration-300`}></div>
-                <div className={`p-4 rounded-xl bg-gradient-to-br ${item.color} text-white w-fit mb-4 shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon size={28} />
-                </div>
-                <h3 className="text-lg font-bold mb-1">{item.title}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 flex-grow">Manage {item.title.toLowerCase()} settings and data.</p>
-                <div className="mt-4 flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -translate-x-4 group-[&:hover]:translate-x-0">
-                  Open Module &rarr;
-                </div>
-              </Link>
-            )
-          })}
-        </section>
+        <AdminMenuGrid />
       </div>
     </main>
   )

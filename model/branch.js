@@ -33,4 +33,8 @@ BranchSchema.index(
   }
 );
 
-export default models.Branch || model("Branch", BranchSchema);
+const branch = models.Branch || model("Branch", BranchSchema);
+
+export {
+  branch
+}

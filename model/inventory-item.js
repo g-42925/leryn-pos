@@ -12,6 +12,11 @@ const InventoryItemSchema = new Schema(
       required: true,
       trim: true,
     },
+    branchId: {
+      type: Schema.Types.ObjectId,
+      ref: 'Branch',
+      required: true,
+    },
     name: {
       type: String,
       required: true,
@@ -32,6 +37,10 @@ const InventoryItemSchema = new Schema(
   }
 );
 
-InventoryItemSchema.index({ inventoryTypeId: 1, name: 1 }, { unique: true });
+InventoryItemSchema.index({ inventoryTypeId: 1, branchId: 1, name: 1 }, { unique: true });
 
-export default models.InventoryItem || model("InventoryItem", InventoryItemSchema);
+const inventoryItem = models.InventoryItem || model("InventoryItem", InventoryItemSchema);
+
+export {
+  inventoryItem
+}

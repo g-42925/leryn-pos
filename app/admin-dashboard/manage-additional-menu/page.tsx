@@ -8,7 +8,8 @@ import { getBranchesAction } from "@/app/actions/manage-branch"
 import { getAdditionalMenusAction, getBranchMenusAction, addAdditionalMenuAction } from "@/app/actions/manage-additional-menu"
 
 export default function ManageAdditionalMenuPage() {
-  const { accountId, hasHydrated } = useGlobalState()
+  const { accountId, role, branch: userBranch, hasHydrated } = useGlobalState()
+  const isSuperadmin = role === 'superadmin'
 
   const [branches, setBranches] = useState<any[]>([])
   const [additionalMenus, setAdditionalMenus] = useState<any[]>([])
@@ -50,11 +51,14 @@ export default function ManageAdditionalMenuPage() {
   useEffect(() => {
     if (hasHydrated && accountId) {
       loadData()
+      if (!isSuperadmin && userBranch) {
+        setBranchId(userBranch)
+      }
     } else if (hasHydrated && !accountId) {
       setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountId, hasHydrated])
+  }, [accountId, hasHydrated, isSuperadmin, userBranch])
 
   // Fetch parent menus when branchId changes
   useEffect(() => {
@@ -149,27 +153,29 @@ export default function ManageAdditionalMenuPage() {
           {error && <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-sm font-medium border border-red-200 dark:border-red-800">{error}</div>}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Cabang</label>
-                <select
-                  value={branchId}
-                  onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none"
-                  required
-                >
-                  <option value="" disabled className="dark:bg-slate-900">Pilih Cabang</option>
-                  {branches.map((b) => (
-                    <option key={b._id} value={b._id} className="dark:bg-slate-900">
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-                {branches.length === 0 && (
-                  <p className="text-xs text-emerald-500 mt-1">
-                    Anda belum membuat Cabang. <Link href="/admin-dashboard/manage-branch" className="underline font-bold">Buat sekarang</Link>.
-                  </p>
-                )}
-              </div>
+              {isSuperadmin && (
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Pilih Cabang</label>
+                  <select
+                    value={branchId}
+                    onChange={(e) => setBranchId(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-emerald-500 outline-none transition-all appearance-none"
+                    required
+                  >
+                    <option value="" disabled className="dark:bg-slate-900">Pilih Cabang</option>
+                    {branches.map((b) => (
+                      <option key={b._id} value={b._id} className="dark:bg-slate-900">
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                  {branches.length === 0 && (
+                    <p className="text-xs text-emerald-500 mt-1">
+                      Anda belum membuat Cabang. <Link href="/admin-dashboard/manage-branch" className="underline font-bold">Buat sekarang</Link>.
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -246,12 +252,12 @@ export default function ManageAdditionalMenuPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {additionalMenus.length === 0 ? (
+            {(isSuperadmin ? additionalMenus : additionalMenus.filter(a => a.branchId?._id === userBranch || a.branchId === userBranch)).length === 0 ? (
               <div className="col-span-full py-16 text-center text-slate-500 dark:text-slate-400 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl">
-                Belum ada menu tambahan yang terdaftar.
+                Belum ada menu tambahan yang terdaftar untuk cabang ini.
               </div>
             ) : (
-              additionalMenus.map((addon) => (
+              (isSuperadmin ? additionalMenus : additionalMenus.filter(a => a.branchId?._id === userBranch || a.branchId === userBranch)).map((addon) => (
                 <div
                   key={addon._id}
                   className="group block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all hover:border-emerald-500 relative overflow-hidden"

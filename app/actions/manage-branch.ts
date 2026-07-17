@@ -1,19 +1,18 @@
 "use server"
 
 import { connectToDatabase } from "@/lib/mongodb"
-import Branch from "@/model/branch"
-import InventoryType from "@/model/inventory-type"
+import { branch } from "@/model/branch"
 
 export async function getBranchesAction(accountId: string) {
   try {
     await connectToDatabase()
-    
+
     // We can also fetch the inventory type details using aggregation or simply fetching after
-    const branches = await Branch.aggregate([
+    const branches = await branch.aggregate([
       { $match: { accountId } },
       {
         $lookup: {
-          from: "inventorytypes", 
+          from: "inventorytypes",
           let: { invId: { $toObjectId: "$inventoryId" } },
           pipeline: [
             { $match: { $expr: { $eq: ["$_id", "$$invId"] } } }
@@ -35,7 +34,8 @@ export async function getBranchesAction(accountId: string) {
     ])
 
     return { success: true, data: JSON.parse(JSON.stringify(branches)) }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     return { success: false, message: error.message }
   }
 }
@@ -43,10 +43,11 @@ export async function getBranchesAction(accountId: string) {
 export async function addBranchAction(accountId: string, name: string, address: string, inventoryId: string) {
   try {
     await connectToDatabase()
-    
-    const newBranch = await Branch.create({ accountId, name, address, inventoryId })
+
+    const newBranch = await branch.create({ accountId, name, address, inventoryId })
     return { success: true, data: JSON.parse(JSON.stringify(newBranch)) }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     return { success: false, message: error.message }
   }
 }

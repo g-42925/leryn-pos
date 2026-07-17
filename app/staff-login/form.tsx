@@ -114,7 +114,31 @@ function StaffLoginForm() {
     if (pin.length === 6 && step === "pin") {
       handleSubmit()
     }
-  }, [pin])
+  }, [pin, step])
+
+  // Keyboard support for PIN entry
+  useEffect(() => {
+    if (step !== "pin") return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is holding modifiers or we're somehow suspended
+      if (e.ctrlKey || e.altKey || e.metaKey) return
+
+      if (/^[0-9]$/.test(e.key)) {
+        setPin((p) => (p.length < 6 ? p + e.key : p))
+      } else if (e.key === "Backspace") {
+        setPin((p) => p.slice(0, -1))
+      } else if (e.key === "Enter") {
+        e.preventDefault()
+        if (pin.length >= 4 && !isPending) {
+          handleSubmit()
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [step, pin, isPending, selectedStaff])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-teal-900 via-teal-800 to-emerald-900 flex items-center justify-center p-4 relative overflow-hidden">

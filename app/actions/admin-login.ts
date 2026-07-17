@@ -5,6 +5,8 @@ import bcrypt from "bcrypt"
 import { cookies } from "next/headers"
 import { admin } from "@/model/admin"
 import { connectToDatabase } from "@/lib/mongodb"
+import { permission } from "@/model/permission"
+import { role } from "@/model/role"
 
 export interface FormState<T> {
   success: boolean
@@ -15,9 +17,11 @@ export interface FormState<T> {
 export interface LoginResponse {
   _id: string
   accountId: string
-  password: string,
-  username: string
+  role: string,
+  branch: string,
+  permissions: []
 }
+
 async function adminLoginAction<T>(prevState: FormState<T>, formData: FormData): Promise<FormState<T>> {
   try {
     await connectToDatabase()
@@ -26,9 +30,6 @@ async function adminLoginAction<T>(prevState: FormState<T>, formData: FormData):
     const accountId = formData.get("accountId") as string
     const password = formData.get("password") as string
 
-    console.log("===============================")
-    console.log({ accountId, uname, password })
-    console.log("===============================")
 
     if (!uname || !password) return {
       success: false,
@@ -49,6 +50,27 @@ async function adminLoginAction<T>(prevState: FormState<T>, formData: FormData):
       message: "Password salah!",
     }
 
+    const defaultPermissions = await permission.find().lean()
+
+    const nonDefaultPermissions = await role.aggregate([
+      {
+        $match: {
+          accountId: accountId,
+          name: r.role
+        },
+      },
+      {
+        $lookup: {
+          from: "permissions",
+          localField: "permissions",
+          foreignField: "_id",
+          as: "permissions"
+        }
+      }
+    ])
+
+    const permissions = r.role === "superadmin" ? defaultPermissions.map((p: { name: string }) => p.name) : nonDefaultPermissions[0].permissions.map((p: { name: string }) => p.name)
+
     const cookieStore = await cookies()
     cookieStore.set("admin_session_token", "contoh-token-jwt-rahasia", {
       httpOnly: true, // Ambil dari server saja, aman dari XSS
@@ -60,7 +82,8 @@ async function adminLoginAction<T>(prevState: FormState<T>, formData: FormData):
 
     const result = {
       ...r,
-      _id: r._id.toString()
+      _id: r._id.toString(),
+      permissions: permissions
     }
 
     return {

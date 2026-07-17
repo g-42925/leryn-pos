@@ -12,7 +12,7 @@ const RoleSchema = new Schema(
       required: true,
     },
     permissions: {
-      type: [String],
+      type: [Schema.Types.ObjectId],
       required: true,
       default: [],
     }
@@ -20,4 +20,12 @@ const RoleSchema = new Schema(
   { timestamps: true }
 );
 
-export default models.Role || model("Role", RoleSchema);
+const role = models.Role || model(
+  "Role",
+  RoleSchema
+);
+
+
+export {
+  role
+}

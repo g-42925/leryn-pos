@@ -59,7 +59,8 @@ const orderTypeMeta: Record<
 }
 
 export default function OrderSettingsPage() {
-  const { accountId, hasHydrated } = useGlobalState()
+  const { accountId, role, branch: userBranch, hasHydrated } = useGlobalState()
+  const isSuperadmin = role === 'superadmin'
 
   const [branches, setBranches] = useState<any[]>([])
   const [selectedBranchId, setSelectedBranchId] = useState("")
@@ -98,12 +99,16 @@ export default function OrderSettingsPage() {
     getBranchesAction(accountId).then((res) => {
       if (res.success && res.data?.length) {
         setBranches(res.data)
-        setSelectedBranchId(res.data[0]._id)
+        if (!isSuperadmin && userBranch) {
+          setSelectedBranchId(userBranch)
+        } else {
+          setSelectedBranchId(res.data[0]._id)
+        }
       }
       setLoadingBranches(false)
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasHydrated, accountId])
+  }, [hasHydrated, accountId, isSuperadmin, userBranch])
 
   // ── Load settings when branch changes ────────────────────────────────────
   const loadSettings = useCallback(async () => {
@@ -221,33 +226,35 @@ export default function OrderSettingsPage() {
         </header>
 
         {/* ── BRANCH SELECTOR ─────────────────────────────────────────────── */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center gap-3 mb-3">
-            <Building2 size={18} className="text-sky-500 shrink-0" />
-            <span className="font-semibold text-sm">Pilih Cabang</span>
-          </div>
-          {branches.length === 0 ? (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Tidak ada cabang. Tambahkan cabang terlebih dahulu.
-            </p>
-          ) : (
-            <div className="relative">
-              <select
-                id="branch-select"
-                value={selectedBranchId}
-                onChange={(e) => setSelectedBranchId(e.target.value)}
-                className="w-full appearance-none px-4 py-3 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none transition-all text-sm font-medium"
-              >
-                {branches.map((b) => (
-                  <option key={b._id} value={b._id} className="dark:bg-slate-900">
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+        {isSuperadmin && (
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <Building2 size={18} className="text-sky-500 shrink-0" />
+              <span className="font-semibold text-sm">Pilih Cabang</span>
             </div>
-          )}
-        </section>
+            {branches.length === 0 ? (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Tidak ada cabang. Tambahkan cabang terlebih dahulu.
+              </p>
+            ) : (
+              <div className="relative">
+                <select
+                  id="branch-select"
+                  value={selectedBranchId}
+                  onChange={(e) => setSelectedBranchId(e.target.value)}
+                  className="w-full appearance-none px-4 py-3 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 focus:ring-2 focus:ring-sky-500 outline-none transition-all text-sm font-medium"
+                >
+                  {branches.map((b) => (
+                    <option key={b._id} value={b._id} className="dark:bg-slate-900">
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+            )}
+          </section>
+        )}
 
         {/* ── GLOBAL ALERTS ───────────────────────────────────────────────── */}
         {successMsg && (

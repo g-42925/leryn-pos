@@ -2,8 +2,7 @@ import mongoose from 'mongoose';
 
 const adminSchema = new mongoose.Schema({
   accountId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Account',
+    type: String,
     required: true
   },
   username: {
@@ -17,8 +16,18 @@ const adminSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true
+  },
+  role: {
+    type: String,
+    required: true
+  },
+  branch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Branch",
+    required: true
   }
 });
+
 
 const admin = mongoose.models.Admin || mongoose.model('Admin', adminSchema);
 

@@ -2,8 +2,7 @@
 
 import { connectToDatabase } from "@/lib/mongodb"
 import Recipe from "@/model/recipe"
-import Branch from "@/model/branch"
-import InventoryItem from "@/model/inventory-item"
+import { inventoryItem as InventoryItem } from "@/model/inventory-item"
 
 export async function getRecipesAction(accountId: string) {
   try {
@@ -18,14 +17,8 @@ export async function getRecipesAction(accountId: string) {
 export async function getBranchInventoryItemsAction(branchId: string, accountId: string) {
   try {
     await connectToDatabase()
-    const branch = await Branch.findOne({ _id: branchId, accountId }).lean()
-    if (!branch) {
-      return { success: false, message: "Branch tidak ditemukan" }
-    }
-    
-    // branch.inventoryId determines the type of inventory items this branch uses
-    const items = await InventoryItem.find({ inventoryTypeId: branch.inventoryId, accountId }).sort({ name: 1 }).lean()
-    
+    // Query inventory items directly by branchId (InventoryItem has a branchId field)
+    const items = await InventoryItem.find({ branchId, accountId }).sort({ name: 1 }).lean()
     return { success: true, data: JSON.parse(JSON.stringify(items)) }
   } catch (error: any) {
     return { success: false, message: error.message }

@@ -7,9 +7,10 @@ import useGlobalState from "@/store/global"
 import { getBranchesAction } from "@/app/actions/manage-branch"
 import { getTableAreasAction, getBranchTablesAction, addTableAreaAction, addTableAction, updateTablePositionAction } from "@/app/actions/manage-table"
 
-function DraggableTable({ table, accountId, onPositionUpdate }: { table: any, accountId: string, onPositionUpdate: (id: string, x: number, y: number) => Promise<void> }) {
+function DraggableTable({ table, allTables, accountId, onPositionUpdate }: { table: any, allTables?: any[], accountId: string, onPositionUpdate: (id: string, x: number, y: number) => Promise<void> }) {
   const [position, setPosition] = useState({ x: table.x || 0, y: table.y || 0 })
   const [isDragging, setIsDragging] = useState(false)
+  const [snapLines, setSnapLines] = useState<{x?: number, y?: number}>({})
   const dragStartPos = useRef({ x: 0, y: 0 })
   const initialTablePos = useRef({ x: table.x || 0, y: table.y || 0 })
 
@@ -32,15 +33,40 @@ function DraggableTable({ table, accountId, onPositionUpdate }: { table: any, ac
     if (!isDragging) return
     const dx = e.clientX - dragStartPos.current.x
     const dy = e.clientY - dragStartPos.current.y
-    const newX = Math.max(0, initialTablePos.current.x + dx)
-    const newY = Math.max(0, initialTablePos.current.y + dy)
+    let newX = Math.max(0, initialTablePos.current.x + dx)
+    let newY = Math.max(0, initialTablePos.current.y + dy)
+
+    let snapX: number | undefined = undefined
+    let snapY: number | undefined = undefined
+    const SNAP_THRESHOLD = 15
+
+    if (allTables) {
+      for (const other of allTables) {
+        if (other._id === table._id) continue
+        
+        // Snapping logic X (left edge)
+        if (Math.abs(newX - other.x) < SNAP_THRESHOLD) {
+          newX = other.x
+          snapX = other.x
+        }
+        
+        // Snapping logic Y (top edge)
+        if (Math.abs(newY - other.y) < SNAP_THRESHOLD) {
+          newY = other.y
+          snapY = other.y
+        }
+      }
+    }
+
     setPosition({ x: newX, y: newY })
+    setSnapLines({ x: snapX, y: snapY })
   }
 
   const handlePointerUp = async (e: React.PointerEvent<HTMLDivElement>) => {
     e.preventDefault()
     if (!isDragging) return
     setIsDragging(false)
+    setSnapLines({})
     e.currentTarget.releasePointerCapture(e.pointerId)
 
     if (position.x !== initialTablePos.current.x || position.y !== initialTablePos.current.y) {
@@ -49,7 +75,20 @@ function DraggableTable({ table, accountId, onPositionUpdate }: { table: any, ac
   }
 
   return (
-    <div
+    <>
+      {isDragging && snapLines.x !== undefined && (
+        <div 
+          className="absolute top-0 bottom-0 border-l-2 border-dashed border-cyan-500 pointer-events-none" 
+          style={{ left: `${snapLines.x}px`, zIndex: 10 }} 
+        />
+      )}
+      {isDragging && snapLines.y !== undefined && (
+        <div 
+          className="absolute left-0 right-0 border-t-2 border-dashed border-cyan-500 pointer-events-none" 
+          style={{ top: `${snapLines.y}px`, zIndex: 10 }} 
+        />
+      )}
+      <div
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -68,12 +107,14 @@ function DraggableTable({ table, accountId, onPositionUpdate }: { table: any, ac
       <div className="flex items-center gap-1 text-xs font-semibold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
         <User size={12} /> {table.capacity} Pax
       </div>
-    </div>
+      </div>
+    </>
   )
 }
 
 export default function ManageTablePage() {
-  const { accountId, hasHydrated } = useGlobalState()
+  const { accountId, role, branch: userBranch, hasHydrated } = useGlobalState()
+  const isSuperadmin = role === 'superadmin'
 
   const [branches, setBranches] = useState<any[]>([])
 
@@ -151,11 +192,14 @@ export default function ManageTablePage() {
   useEffect(() => {
     if (hasHydrated && accountId) {
       loadInitialData()
+      if (!isSuperadmin && userBranch) {
+        setBranchId(userBranch)
+      }
     } else if (hasHydrated && !accountId) {
       setLoading(false)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [accountId, hasHydrated])
+  }, [accountId, hasHydrated, isSuperadmin, userBranch])
 
   useEffect(() => {
     loadBranchData(branchId)
@@ -255,27 +299,29 @@ export default function ManageTablePage() {
         </header>
 
         {/* TOP LEVEL: BRANCH SELECTION */}
-        <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-          <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">Pilih Cabang (Branch)</label>
-          <select
-            value={branchId}
-            onChange={(e) => setBranchId(e.target.value)}
-            className="w-full max-w-md px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-cyan-500 outline-none transition-all appearance-none"
-            required
-          >
-            <option value="" disabled className="dark:bg-slate-900">Pilih Cabang untuk mengelola area</option>
-            {branches.map((b) => (
-              <option key={b._id} value={b._id} className="dark:bg-slate-900">
-                {b.name}
-              </option>
-            ))}
-          </select>
-          {branches.length === 0 && (
-            <p className="text-xs text-cyan-500 mt-3">
-              Anda belum membuat Cabang. <Link href="/admin-dashboard/manage-branch" className="underline font-bold">Buat sekarang</Link>.
-            </p>
-          )}
-        </section>
+        {isSuperadmin && (
+          <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 block">Pilih Cabang (Branch)</label>
+            <select
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+              className="w-full max-w-md px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent focus:ring-2 focus:ring-cyan-500 outline-none transition-all appearance-none"
+              required
+            >
+              <option value="" disabled className="dark:bg-slate-900">Pilih Cabang untuk mengelola area</option>
+              {branches.map((b) => (
+                <option key={b._id} value={b._id} className="dark:bg-slate-900">
+                  {b.name}
+                </option>
+              ))}
+            </select>
+            {branches.length === 0 && (
+              <p className="text-xs text-cyan-500 mt-3">
+                Anda belum membuat Cabang. <Link href="/admin-dashboard/manage-branch" className="underline font-bold">Buat sekarang</Link>.
+              </p>
+            )}
+          </section>
+        )}
 
         {branchId && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -451,6 +497,7 @@ export default function ManageTablePage() {
                             <DraggableTable
                               key={table._id}
                               table={table}
+                              allTables={areaTables}
                               accountId={accountId}
                               onPositionUpdate={handlePositionUpdate}
                             />

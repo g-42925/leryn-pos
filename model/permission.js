@@ -2,11 +2,6 @@ import { Schema, model, models } from "mongoose";
 
 const PermissionSchema = new Schema(
   {
-    accountId: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     name: {
       type: String,
       required: true,
@@ -14,9 +9,16 @@ const PermissionSchema = new Schema(
     description: {
       type: String,
       default: "",
-    }
+    },
   },
   { timestamps: true }
 );
 
-export default models.Permission || model("Permission", PermissionSchema);
+const permission = models.Permission || model(
+  "Permission",
+  PermissionSchema
+);
+
+export {
+  permission
+}
