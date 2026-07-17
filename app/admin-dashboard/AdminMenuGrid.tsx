@@ -3,7 +3,6 @@
 import Link from "next/link"
 import { Utensils, PlusSquare, Calculator, Settings, Grid, Users, PieChart, UserCircle, Store, Package, GitBranch, Shield, BookOpen, UserCog } from "lucide-react"
 import useGlobalState from "@/store/global"
-import { useEffect, useState } from "react"
 
 const allMenuItems = [
   { title: "Manage Menu", icon: Utensils, href: "/admin-dashboard/manage-menu", color: "from-emerald-500 to-teal-600" },
