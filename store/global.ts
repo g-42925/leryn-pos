@@ -2,6 +2,7 @@
 
 import { create } from 'zustand'
 import { deleteAuthCookie } from '@/app/actions/logout';
+import { staffLogoutAction } from '@/app/actions/staff-logout';
 import { persist, devtools } from 'zustand/middleware'
 
 export interface GlobalState {
@@ -26,6 +27,9 @@ const useGlobalState = create<Global>()(
           set(initialState)
           await deleteAuthCookie()
         },
+        staffLogout: async () => {
+          await staffLogoutAction()
+        },
         login: (r: GlobalState) => {
           set(() => ({
             ...r
@@ -46,6 +50,7 @@ const useGlobalState = create<Global>()(
 type Global = GlobalState & {
   hasHydrated: boolean;
   login: (r: GlobalState) => void;
+  staffLogout: () => void;
   logout: () => void;
 }
 

@@ -9,7 +9,7 @@ function Content() {
 
   const logoutAct = useGlobalStore((state) => state.logout);
   const toAdminLogin = () => router.push("/admin-login");
-  const toStaffLogin = () => router.push("/login");
+  const toStaffLogin = () => router.push("/staff-login");
   const toSupport = () => router.push("/support");
 
   const toLogout = () => {
@@ -34,7 +34,7 @@ function Content() {
         </div>
 
         {/* Menu */}
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-3 gap-5 ">
 
           <MenuCard
             icon={<User size={42} />}
@@ -48,13 +48,6 @@ function Content() {
             title="Staff Login"
             color="text-teal-500"
             act={toStaffLogin}
-          />
-
-          <MenuCard
-            icon={<Headset size={42} />}
-            title="Support"
-            color="text-teal-500"
-            act={toSupport}
           />
 
           <MenuCard

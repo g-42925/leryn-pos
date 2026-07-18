@@ -26,7 +26,11 @@ async function adminLoginAction<T>(prevState: FormState<T>, formData: FormData):
     const accountId = formData.get("accountId") as string
     const password = formData.get("password") as string
 
-    if (!accountId || !uname || !password) return {
+    console.log("===============================")
+    console.log({ accountId, uname, password })
+    console.log("===============================")
+
+    if (!uname || !password) return {
       success: false,
       message: "Credential tidak boleh kosong",
     }

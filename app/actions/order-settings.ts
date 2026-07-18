@@ -21,7 +21,8 @@ export async function getOrderSettingsAction(accountId: string, branchId: string
     }
 
     return { success: true, data: JSON.parse(JSON.stringify(settings)) }
-  } catch (error: any) {
+  }
+  catch (error: any) {
     return { success: false, message: error.message }
   }
 }

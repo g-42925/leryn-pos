@@ -1,17 +1,17 @@
 "use client"
 
 import useGlobalStore from "@/store/global"
+import { useRouter } from 'next/navigation'
 import { useFormAction } from "@/hooks/useFormAction";
 import { adminLoginAction, FormState, LoginResponse } from "@/app/actions/admin-login";
 
 function Form() {
-  const login = useGlobalStore((s) => s.login)
+  const router = useRouter()
   const accountId = useGlobalStore((s) => s.accountId)
 
   const _login = useFormAction(adminLoginAction, {
     onSuccess: (state: FormState<LoginResponse>) => {
-      login({ accountId: state.result?._id as string })
-      redirect("/admin-dashboard")
+      router.push("/admin-dashboard")
     }
   })
 
